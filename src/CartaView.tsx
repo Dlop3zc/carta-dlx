@@ -89,9 +89,15 @@ export default function PublicMenuView() {
 
   return (
     <div className="h-[100dvh] overflow-y-auto bg-zinc-950 text-zinc-50 select-text">
-      <header className="px-4 pt-8 pb-4 flex flex-col items-center text-center">
-        <SomaLogo className="w-36 text-amber-200" />
-        <p className="mt-2 text-xs uppercase tracking-[0.3em] text-zinc-400">Carta</p>
+      <header className="px-4 pt-10 pb-6 sm:pt-14 sm:pb-8 flex flex-col items-center text-center">
+        {/* El logo crece con la pantalla: ~85% del ancho en celular, hasta 34rem en computadora */}
+        <SomaLogo className="w-[clamp(16rem,85vw,34rem)] text-amber-200" />
+        {/* Mismo estilo que "SOMA" en el logo: serif, dorado y letras espaciadas */}
+        <h1 className="mt-4 flex items-center gap-4 text-amber-200">
+          <span className="h-px w-8 sm:w-12 bg-amber-200/60" aria-hidden />
+          <span className="font-['Georgia',serif] uppercase text-[clamp(1.75rem,8vw,2.75rem)] tracking-[0.35em] -mr-[0.35em] leading-none">Carta</span>
+          <span className="h-px w-8 sm:w-12 bg-amber-200/60" aria-hidden />
+        </h1>
       </header>
 
       {sections.length > 1 && (
@@ -124,12 +130,12 @@ export default function PublicMenuView() {
         ) : (
           sections.map(({ category, items }) => (
             <section key={category} id={sectionId(category)} className="scroll-mt-20 pt-8">
-              <h2 className="text-lg font-bold text-amber-200 uppercase tracking-wider mb-2">{category}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-amber-200 uppercase tracking-wider mb-2">{category}</h2>
               <ul className="divide-y divide-zinc-800/80">
                 {items.map(p => {
                   const soldOut = isSoldOut(inventory[p.id] || DEFAULT_INVENTORY);
                   return (
-                    <li key={p.id} className="flex items-baseline justify-between gap-4 py-3">
+                    <li key={p.id} className="flex items-baseline justify-between gap-4 py-3 sm:text-lg">
                       <span className={`min-w-0 ${soldOut ? 'text-zinc-500 line-through decoration-zinc-600' : 'text-zinc-100'}`}>
                         {p.name}
                       </span>
