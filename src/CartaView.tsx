@@ -89,9 +89,10 @@ export default function PublicMenuView() {
 
   return (
     <div className="h-[100dvh] overflow-y-auto bg-zinc-950 text-zinc-50 select-text">
-      <header className="px-4 pt-8 pb-4 flex flex-col items-center text-center">
-        <SomaLogo className="w-36 text-amber-200" />
-        <p className="mt-2 text-xs uppercase tracking-[0.3em] text-zinc-400">Carta</p>
+      <header className="px-4 pt-10 pb-6 sm:pt-14 sm:pb-8 flex flex-col items-center text-center">
+        {/* El logo crece con la pantalla: ~85% del ancho en celular, hasta 34rem en computadora */}
+        <SomaLogo className="w-[clamp(16rem,85vw,34rem)] text-amber-200" />
+        <p className="mt-3 text-xs sm:text-sm uppercase tracking-[0.3em] text-zinc-400">Carta</p>
       </header>
 
       {sections.length > 1 && (
@@ -124,12 +125,12 @@ export default function PublicMenuView() {
         ) : (
           sections.map(({ category, items }) => (
             <section key={category} id={sectionId(category)} className="scroll-mt-20 pt-8">
-              <h2 className="text-lg font-bold text-amber-200 uppercase tracking-wider mb-2">{category}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-amber-200 uppercase tracking-wider mb-2">{category}</h2>
               <ul className="divide-y divide-zinc-800/80">
                 {items.map(p => {
                   const soldOut = isSoldOut(inventory[p.id] || DEFAULT_INVENTORY);
                   return (
-                    <li key={p.id} className="flex items-baseline justify-between gap-4 py-3">
+                    <li key={p.id} className="flex items-baseline justify-between gap-4 py-3 sm:text-lg">
                       <span className={`min-w-0 ${soldOut ? 'text-zinc-500 line-through decoration-zinc-600' : 'text-zinc-100'}`}>
                         {p.name}
                       </span>
