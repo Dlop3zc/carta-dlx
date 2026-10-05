@@ -18,12 +18,16 @@ type Session =
   | { state: 'out'; error?: string }
   | { state: 'in'; user: User };
 
-async function isMenuEditor(uid: string) {
+// Devuelve el motivo si la cuenta no puede editar, o null si sí puede
+async function editorProblem(uid: string): Promise<string | null> {
   try {
     const snap = await getDoc(doc(db, 'menuEditors', uid));
-    return snap.exists() && snap.data().active === true;
-  } catch {
-    return false;
+    if (!snap.exists()) return `Esta cuenta no tiene permiso para editar la carta (falta el documento menuEditors/${uid}).`;
+    if (snap.data().active !== true) return 'Esta cuenta no tiene permiso para editar la carta (el campo active no es true de tipo boolean).';
+    return null;
+  } catch (err) {
+    console.error(err);
+    return `No se pudo verificar el permiso de editor (${(err as { code?: string }).code || 'error'}).`;
   }
 }
 
@@ -37,11 +41,12 @@ export default function AdminView() {
         setSession(s => (s.state === 'out' ? s : { state: 'out' }));
         return;
       }
-      if (await isMenuEditor(user.uid)) {
+      const problem = await editorProblem(user.uid);
+      if (!problem) {
         setSession({ state: 'in', user });
       } else {
         await signOut(auth);
-        setSession({ state: 'out', error: 'Esta cuenta no tiene permiso para editar la carta.' });
+        setSession({ state: 'out', error: problem });
       }
     });
   }, []);
@@ -56,7 +61,8 @@ export default function AdminView() {
   if (session.state === 'loading') {
     return <div className="h-[100dvh] grid place-items-center text-zinc-500">Cargando…</div>;
   }
-  if (session.state === 'out') return <LoginForm initialError={session.error} />;
+  // key: el formulario se vuelve a montar para mostrar el error de permiso que llega después del login
+  if (session.state === 'out') return <LoginForm key={session.error || ''} initialError={session.error} />;
   return <MenuEditorView userEmail={session.user.email || ''} onLogout={() => signOut(auth)} />;
 }
 
