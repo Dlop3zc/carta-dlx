@@ -43,11 +43,13 @@ las cuentas de `menuEditors` escriben la carta.
 
 La carta se publica en un proyecto de Firebase de DLX, aparte del de SOMA. Solo usa Hosting.
 
-1. **Una sola vez:** crea el proyecto en [console.firebase.google.com](https://console.firebase.google.com)
-   (por ejemplo `carta-soma-dlx`) y entra a **Hosting → Comenzar** (avanza sin correr los comandos que muestra).
-2. **Una sola vez:** en este repositorio, `npx firebase use --add`, elige ese proyecto y llámalo `default`.
-3. `npm run deploy`. Compila contra la base de producción de SOMA y publica en `https://<id-del-proyecto>.web.app`.
-4. Esa dirección es la que va en el QR. Si DLX conecta un dominio propio (Hosting → Agregar dominio
+El proyecto es **`carta-dlx`** (ya está en `.firebaserc`).
+
+1. **Una sola vez:** en [console.firebase.google.com](https://console.firebase.google.com), proyecto `carta-dlx`,
+   entra a **Hosting → Comenzar** (avanza sin correr los comandos que muestra).
+2. `npm install` y `npm run deploy`. Compila contra la base de producción de SOMA y publica en
+   `https://carta-dlx.web.app` (carta) y `https://carta-dlx.web.app/admin` (editor).
+3. Esa dirección es la que va en el QR. Si DLX conecta un dominio propio (Hosting → Agregar dominio
    personalizado), el QR puede apuntar a ese dominio y no habrá que reimprimirlo si cambia el proyecto.
 
 Las reglas de Firestore viven en el repo del punto de venta (`firestore.rules` en
