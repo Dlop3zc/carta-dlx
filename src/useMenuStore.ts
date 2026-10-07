@@ -12,7 +12,8 @@ import { defaultCategories, defaultProducts, type Product } from './cartaInicial
 
 // Producto de la carta en `products/{id}`
 export interface MenuProduct extends Product {
-  visible: boolean;  // aparece en la carta y en el punto de venta
+  visible: boolean;  // se vende en el punto de venta (si es false tampoco sale en la carta)
+  enCarta: boolean;  // aparece en la carta digital; false = solo en el punto de venta
   position: number;  // orden dentro de su categoría
   updatedAt: number;
 }
@@ -22,6 +23,7 @@ export interface ProductInput {
   price: number;
   category: string;
   visible: boolean;
+  enCarta: boolean;
 }
 
 export const MAX_NAME_LENGTH = 60;
@@ -52,6 +54,7 @@ interface MenuState {
   seedDefaultMenu: () => Promise<boolean>;
   saveProduct: (id: string | null, input: ProductInput) => Promise<void>;
   setVisible: (id: string, visible: boolean) => Promise<void>;
+  setEnCarta: (id: string, enCarta: boolean) => Promise<void>;
   moveProduct: (id: string, direction: -1 | 1) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
@@ -100,7 +103,7 @@ export const useMenuStore = create<MenuState>((set, get) => {
 
     initMenuListener: () => {
       const unsubProducts = onSnapshot(collection(db, 'products'), (snapshot) => {
-        rawProducts = snapshot.docs.map(d => ({ visible: true, position: 0, ...d.data(), id: d.id }) as MenuProduct);
+        rawProducts = snapshot.docs.map(d => ({ visible: true, enCarta: true, position: 0, ...d.data(), id: d.id }) as MenuProduct);
         gotProducts = true;
         publish();
       }, (error) => console.error("🔥 Error escuchando products:", error));
@@ -144,6 +147,7 @@ export const useMenuStore = create<MenuState>((set, get) => {
         price: round2(input.price),
         category,
         visible: input.visible,
+        enCarta: input.enCarta,
         updatedAt: Date.now(),
       };
 
@@ -164,6 +168,10 @@ export const useMenuStore = create<MenuState>((set, get) => {
 
     setVisible: async (id, visible) => {
       await setDoc(doc(db, 'products', id), { visible, updatedAt: Date.now() }, { merge: true });
+    },
+
+    setEnCarta: async (id, enCarta) => {
+      await setDoc(doc(db, 'products', id), { enCarta, updatedAt: Date.now() }, { merge: true });
     },
 
     moveProduct: async (id, direction) => {
