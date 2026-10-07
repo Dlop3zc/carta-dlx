@@ -46,7 +46,10 @@ export default function PublicMenuView() {
     };
     const unsubProducts = onSnapshot(
       query(collection(db, 'products'), where('visible', '==', true)),
-      (snap) => setProducts(snap.docs.map(d => ({ position: 0, ...d.data(), id: d.id }) as MenuProduct)),
+      // Los que tienen enCarta: false se venden en el punto de venta pero no salen aquí
+      (snap) => setProducts(snap.docs
+        .map(d => ({ position: 0, ...d.data(), id: d.id }) as MenuProduct)
+        .filter(p => p.enCarta !== false)),
       onError,
     );
     const unsubMenu = onSnapshot(

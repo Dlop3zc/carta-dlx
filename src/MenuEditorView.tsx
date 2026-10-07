@@ -12,7 +12,7 @@ function parsePrice(value: string): number {
 }
 
 export default function MenuEditorView({ userEmail, onLogout }: { userEmail: string; onLogout: () => void }) {
-  const { products, categories, loaded, setVisible, moveProduct, seedDefaultMenu } = useMenuStore();
+  const { products, categories, loaded, setEnCarta, moveProduct, seedDefaultMenu } = useMenuStore();
   const [importing, setImporting] = useState(false);
   const [category, setCategory] = useState(ALL);
   const [search, setSearch] = useState('');
@@ -37,7 +37,7 @@ export default function MenuEditorView({ userEmail, onLogout }: { userEmail: str
     }
   };
 
-  const hiddenCount = products.filter(p => !p.visible).length;
+  const hiddenCount = products.filter(p => !p.visible || !p.enCarta).length;
 
   return (
     <div className="h-[100dvh] bg-zinc-900 flex flex-col overflow-hidden">
@@ -89,7 +89,7 @@ export default function MenuEditorView({ userEmail, onLogout }: { userEmail: str
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <span className="text-zinc-500 text-sm">
-            {products.length} productos{hiddenCount > 0 && ` · ${hiddenCount} oculto${hiddenCount === 1 ? '' : 's'}`}
+            {products.length} productos{hiddenCount > 0 && ` · ${hiddenCount} fuera de la carta`}
           </span>
         </div>
         <p className="text-zinc-500 text-sm">
@@ -127,7 +127,7 @@ export default function MenuEditorView({ userEmail, onLogout }: { userEmail: str
             ) : (
               <div className="bg-zinc-950 border border-zinc-800 rounded-2xl divide-y divide-zinc-800 overflow-hidden">
                 {group.items.map((p, i) => (
-                  <div key={p.id} className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3 ${p.visible ? '' : 'opacity-60'}`}>
+                  <div key={p.id} className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3 ${p.visible && p.enCarta ? '' : 'opacity-60'}`}>
                     {!query && (
                       <div className="flex flex-col shrink-0">
                         <button
@@ -150,17 +150,21 @@ export default function MenuEditorView({ userEmail, onLogout }: { userEmail: str
                     )}
                     <button onClick={() => setEditing(p)} className="flex-1 min-w-0 text-left">
                       <p className="text-zinc-100 font-bold truncate">{p.name}</p>
-                      {!p.visible && <p className="text-xs text-zinc-500">Oculto en la carta</p>}
+                      {!p.visible
+                        ? <p className="text-xs text-zinc-500">Oculto en la carta y en el punto de venta</p>
+                        : !p.enCarta && <p className="text-xs text-amber-300/80">Solo en el punto de venta</p>}
                     </button>
                     <span className="text-emerald-400 font-bold shrink-0">${p.price.toFixed(2)}</span>
                     <button
-                      onClick={() => run(setVisible(p.id, !p.visible))}
-                      className={`p-2.5 rounded-xl shrink-0 transition-colors ${
-                        p.visible ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-600'
+                      // El ojo solo cambia la carta digital; el punto de venta lo sigue vendiendo
+                      onClick={() => run(setEnCarta(p.id, !p.enCarta))}
+                      disabled={!p.visible}
+                      className={`p-2.5 rounded-xl shrink-0 transition-colors disabled:opacity-40 ${
+                        p.visible && p.enCarta ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-600'
                       }`}
-                      title={p.visible ? 'Ocultar de la carta' : 'Mostrar en la carta'}
+                      title={p.enCarta ? 'Quitar de la carta (sigue en el punto de venta)' : 'Mostrar en la carta'}
                     >
-                      {p.visible ? <Eye size={18} /> : <EyeOff size={18} />}
+                      {p.visible && p.enCarta ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
                     <button
                       onClick={() => setEditing(p)}
@@ -202,6 +206,7 @@ function ProductModal({ product, defaultCategory, onClose }: {
   const [category, setCategory] = useState(product?.category || defaultCategory);
   const [newCategory, setNewCategory] = useState('');
   const [visible, setVisible] = useState(product?.visible ?? true);
+  const [enCarta, setEnCarta] = useState(product?.enCarta ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -213,7 +218,7 @@ function ProductModal({ product, defaultCategory, onClose }: {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const input = { name, price, category: finalCategory, visible };
+    const input = { name, price, category: finalCategory, visible, enCarta };
     const invalid = validateProduct(input);
     if (invalid) return setError(invalid);
     if (duplicate) return setError('Ya hay un producto con ese nombre en la categoría.');
@@ -283,10 +288,18 @@ function ProductModal({ product, defaultCategory, onClose }: {
             )}
           </label>
 
+          <label className={`flex items-center gap-3 bg-zinc-800/60 border border-zinc-700 rounded-xl p-4 cursor-pointer ${visible ? '' : 'opacity-50'}`}>
+            <input type="checkbox" checked={visible && enCarta} disabled={!visible} onChange={e => setEnCarta(e.target.checked)} className="w-5 h-5 accent-blue-500" />
+            <span>
+              <span className="block text-zinc-100 font-bold">Mostrar en la carta digital</span>
+              <span className="block text-zinc-400 text-sm">Si lo desmarcas, los clientes no lo ven en la carta, pero se puede seguir cobrando en el punto de venta.</span>
+            </span>
+          </label>
+
           <label className="flex items-center gap-3 bg-zinc-800/60 border border-zinc-700 rounded-xl p-4 cursor-pointer">
             <input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} className="w-5 h-5 accent-blue-500" />
             <span>
-              <span className="block text-zinc-100 font-bold">Visible en la carta</span>
+              <span className="block text-zinc-100 font-bold">Disponible en el punto de venta</span>
               <span className="block text-zinc-400 text-sm">Si lo desmarcas, no aparece en la carta ni en el punto de venta, pero se conserva para volver a activarlo.</span>
             </span>
           </label>
