@@ -12,6 +12,7 @@ interface MenuProduct {
   name: string;
   price: number;
   category: string;
+  enCarta?: boolean;  // false = solo en el punto de venta
   position: number;
 }
 
